@@ -8,26 +8,26 @@
 [![License](https://img.shields.io/badge/License-Apache--2.0-green.svg)](./LICENSE)
 
 <p>
-  Shengbang Liu<sup>1,3,*</sup>,
-  Yueru Jia<sup>1,2,*</sup>,
-  Yuyang Yan<sup>1,*</sup>,
-  Jiaming Liu<sup>1,*,†</sup>,
-  Xinran Zhang<sup>1,2</sup>,
-  Qiuxuan Feng<sup>1</sup>,
-  Yandong Guo<sup>2</sup>,
-  Shiji Zhou<sup>4</sup>,
-  Boxin Shi<sup>1</sup>,
-  Shanghang Zhang<sup>1</sup>
+  <a href="https://liushb9.github.io/">Shengbang Liu</a><sup>1,3,*</sup>&nbsp;&nbsp;
+  <a href="https://jiayueru.github.io/">Yueru Jia</a><sup>1,2,*</sup>&nbsp;&nbsp;
+  <a href="https://github.com/avx34/">Yuyang Yan</a><sup>1,*</sup>&nbsp;&nbsp;
+  <a href="https://liujiaming1996.github.io/">Jiaming Liu</a><sup>1,*,†</sup>&nbsp;&nbsp;
+  <a href="https://scholar.google.com/citations?user=16aBS6kAAAAJ&hl=zh-CN&oi=sra">Xinran Zhang</a><sup>1,2</sup>&nbsp;&nbsp;
+  <a href="https://github.com/xuanxuanzzzii">Qiuxuan Feng</a><sup>1</sup>&nbsp;&nbsp;
+  <a href="https://scholar.google.com/citations?user=fWDoWsQAAAAJ&hl=en">Yandong Guo</a><sup>2</sup>&nbsp;&nbsp;
+  <a href="https://arnoldshijizhou.github.io/">Shiji Zhou</a><sup>4</sup>&nbsp;&nbsp;
+  <a href="https://camera.pku.edu.cn/">Boxin Shi</a><sup>1</sup>&nbsp;&nbsp;
+  <a href="https://scholar.google.com/citations?user=voqw10cAAAAJ&hl=en">Shanghang Zhang</a><sup>1,📧</sup>
 </p>
 
 <p>
-  <sup>1</sup>State Key Laboratory of Multimedia Information Processing, School of Computer Science, Peking University&nbsp;&nbsp;
+  <sup>1</sup>State Key Laboratory of Multimedia Information Processing, School of Computer Science, Peking University<br>
   <sup>2</sup>AI2 Robotics&nbsp;&nbsp;
   <sup>3</sup>Sun Yat-sen University&nbsp;&nbsp;
   <sup>4</sup>Beihang University
 </p>
 
-<sub><sup>*</sup>Equal Contribution&nbsp;&nbsp;<sup>†</sup>Project Lead</sub>
+<sub><sup>*</sup>Equal Contribution&nbsp;&nbsp;<sup>†</sup>Project Lead&nbsp;&nbsp;<sup>📧</sup>Corresponding Author</sub>
 
 </div>
 
@@ -45,32 +45,12 @@ This repository is currently a lightweight public landing repo. Core code, model
 
 ## 📋 Table of Contents
 
-- [Highlights](#-highlights)
-- [Method Overview](#-method-overview)
 - [Roadmap](#-roadmap)
 - [Repository Structure](#-repository-structure)
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
 - [Documentation](#-documentation)
 - [Citation](#-citation)
-
-## ✨ Highlights
-
-- **Tactile-aware world model:** jointly denoises future video and 12-D force-torque trajectories for contact-consistent imagination.
-- **Recognize-Imagine-Label loop:** converts real-world failures into local visuo-tactile corrections without repeated human intervention.
-- **Unified progress-action model:** estimates task progress, localizes failure-adjacent states, and labels imagined segments with executable 7-DoF corrective actions.
-- **Knowledge-insulated tactile adaptation:** blocks tactile-action gradients from updating the pretrained VLM backbone, preserving visual-language priors during tactile post-training.
-
-## 🧠 Method Overview
-
-TACO uses real robot rollouts as the starting point for iterative post-training:
-
-1. **Recognize:** a unified progress-action model predicts dense task progress and selects failure-adjacent contact states where progress stalls or decreases.
-2. **Imagine:** a visuo-tactile generation model imagines local correction segments by jointly generating future RGB observations and left/right 6-DoF force-torque signals.
-3. **Label:** the progress-action model converts imagined visuo-tactile corrections into executable corrective actions and progress labels.
-4. **Post-train:** the VLA action expert is updated with tactile correction data while the pretrained VLM backbone is protected through knowledge insulation.
-
-See [Method Overview](./docs/method_overview.md) for a more detailed summary.
 
 <p align="center">
   <img src="./assets/pipeline.png" alt="TACO iterative post-training pipeline" width="100%">
@@ -124,7 +104,6 @@ Coming soon.
 
 ## 📚 Documentation
 
-- [Method Overview](./docs/method_overview.md)
 - [Release Notes](./docs/release_notes.md)
 - [Examples](./examples)
 
