@@ -27,15 +27,9 @@ Naively fine-tuning a full VLA on tactile-heavy correction data can erode pretra
 During post-training:
 
 - image, language, and state tokens are encoded by the VLM backbone;
-- force history and advantage are injected into the action expert through adaRMSNorm conditioning;
-- only the action expert, tactile encoder, advantage encoder, and adaptation layers are optimized.
+- force history is injected into the action expert through adaRMSNorm conditioning;
+- only the action expert, tactile encoder, and adaptation layers are optimized.
 
-## Advantage-Conditioned Post-Training
+## VLA Post-Training
 
-TACO assigns binary advantage labels to distinguish recovery-oriented corrections from failed rollout segments:
-
-- `advantage = 1`: expert demonstrations, successful pre-failure segments, and imagined corrective segments;
-- `advantage = 0`: failed segments after recognized failure onset.
-
-At inference time, the policy is conditioned on positive advantage to encourage high-progress tactile recovery behavior.
-
+TACO post-trains the VLA with demonstrations, real rollouts, and imagined corrections. The goal is to focus supervision on contact-sensitive recovery behaviors while preserving the pretrained visual-language knowledge needed for pre-contact grounding.
