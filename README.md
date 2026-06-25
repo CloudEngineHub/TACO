@@ -33,6 +33,10 @@
 
 ---
 
+<p align="center">
+  <img src="./assets/overview.png" alt="TACO overview" width="100%">
+</p>
+
 TACO is a tactile-aware world-model-driven framework for scalable VLA post-training in contact-rich robot manipulation. Given real-world rollouts, TACO follows a **Recognize-Imagine-Label** loop: it recognizes failure-adjacent contact states, imagines local visuo-tactile correction segments, and labels corrective actions for policy post-training.
 
 The resulting corrective supervision is used with **knowledge-insulated tactile adaptation**, allowing the policy to learn contact recovery behaviors without degrading pretrained visual-language priors.
@@ -67,6 +71,14 @@ TACO uses real robot rollouts as the starting point for iterative post-training:
 4. **Post-train:** the VLA action expert is updated with tactile correction data while the pretrained VLM backbone is protected through knowledge insulation.
 
 See [Method Overview](./docs/method_overview.md) for a more detailed summary.
+
+<p align="center">
+  <img src="./assets/pipeline.png" alt="TACO iterative post-training pipeline" width="100%">
+</p>
+
+<p align="center">
+  <img src="./assets/model_architecture.png" alt="TACO tactile-aware world model architecture" width="100%">
+</p>
 
 ## 🗓 Roadmap
 
