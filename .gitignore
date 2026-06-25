@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Build outputs
+build/
+dist/
+
+# Experiment outputs
+checkpoints/
+outputs/
+logs/
+wandb/
+runs/
+
+# Data and large assets
+data/
+datasets/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.hdf5
+*.mp4
+
+# System files
+.DS_Store
+Thumbs.db
+
