@@ -1,0 +1,80 @@
+task: train
+
+runner:
+  class_path: visuo_tactile_world_model.world_model.runner.wan.wan_training.WanTrainRunner
+  params:
+    output_path: <OUTPUT_DIR>
+    height: 192
+    width: 256
+    num_frames: 37
+    dataset_repeat: 1
+    trainable_models: dit,tactile_tokenizer,tactile_head
+    extra_inputs: input_image,force_sequence
+    data_file_keys: image,video,force_sequence
+    learning_rate: 1.0e-5
+    batch_size: 1
+    num_epochs: 1000
+    save_steps: 500
+    remove_prefix_in_ckpt: pipe.
+    use_gradient_checkpointing: true
+    task: sft_joint_denoise:train
+    tactile_sequence_key: force_sequence
+    tactile_dim: 12
+    tactile_hidden_dim: 512
+    tactile_num_layers: 2
+    tactile_loss_weight: 0.1
+    tactile_stats_path: <TACTILE_STATS_NPZ>
+    wandb_enabled: false
+    wandb_project: TACO
+    wandb_run_name: visuo_tactile_joint_train
+    wandb_mode: disabled
+    wandb_log_every: 20
+    validation_every_steps: 1000
+    validation_extra_steps: [10]
+    validation_num_samples: 8
+    validation_fps: 6
+    validation_quality: 5
+    validation_seed_base: 0
+    validation_input_image_resize_mode: letterbox
+    validation_infer_kwargs:
+      negative_prompt: ""
+      height: 192
+      width: 256
+      num_frames: 37
+      cfg_scale: 1.0
+      num_inference_steps: 30
+      tiled: true
+      return_tactile: true
+
+model:
+  class_path: visuo_tactile_world_model.world_model.model.wan.pipeline_ti2v_5b_joint_denoise.WanTI2V5BJointDenoisePipeline
+  params:
+    device: cuda
+    torch_dtype: bfloat16
+    tokenizer_path: <TOKENIZER_DIR>
+    model_paths:
+      - <ROBOT_DIT_CHECKPOINT>
+      - <TEXT_ENCODER_CHECKPOINT>
+      - <VAE_CHECKPOINT>
+
+dataset:
+  class_path: visuo_tactile_world_model.world_model.dataset.unified_dataset.UnifiedDataset
+  params:
+    dataset_base_path: <LATENT_CACHE_DIR>
+    dataset_metadata_path: null
+
+runtime:
+  params:
+    gradient_accumulation_steps: 1
+
+validation_dataset:
+  class_path: visuo_tactile_world_model.world_model.dataset.video_infer.TactileVideoInferenceDataset
+  params:
+    base_path: <DATA_ROOT>
+    metadata_path: <METADATA_CSV>
+    video_key: video
+    prompt_key: prompt
+    demo_id_key: demo_id
+    camera_key_col: camera_key
+    force_key: force_sequence
+    stats_path: <TACTILE_STATS_NPZ>

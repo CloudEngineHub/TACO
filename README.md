@@ -41,15 +41,13 @@ TACO is a tactile-aware world-model-driven framework for scalable VLA post-train
 
 The resulting corrective supervision is used with **knowledge-insulated tactile adaptation**, allowing the policy to learn contact recovery behaviors without degrading pretrained visual-language priors.
 
-This repository is currently a lightweight public landing repo. Core code, model checkpoints, datasets, and detailed training recipes will be released progressively according to the roadmap below.
+This repository now includes the first staged release of the TACO tactile-aware world model. The released code covers visuo-tactile joint denoising for Wan-style video world models, tactile/force sequence loading, training/cache runners, inference support, and example configs. Model checkpoints, datasets, tactile-aware VLA code, and the full post-training loop will be released progressively.
 
 ## 📋 Table of Contents
 
 - [Roadmap](#-roadmap)
 - [Repository Structure](#-repository-structure)
-- [Installation](#-installation)
-- [Quick Start](#-quick-start)
-- [Documentation](#-documentation)
+- [World Model](#-world-model)
 - [Citation](#-citation)
 
 <p align="center">
@@ -62,7 +60,7 @@ This repository is currently a lightweight public landing repo. Core code, model
 
 ## 🗓 Roadmap
 
-- [ ] Open-source visuo-tactile world model
+- [x] Open-source visuo-tactile world model
 - [ ] Open-source tactile-aware VLA
 - [ ] Open-source the full TACO framework
 
@@ -70,42 +68,30 @@ This repository is currently a lightweight public landing repo. Core code, model
 
 ```text
 TACO/
-├── assets/                 # Figures, videos, and project media
-├── docs/                   # Guides and release notes
-├── examples/               # Minimal runnable examples
-├── taco/                   # Core package; released progressively
-├── README.md               # Project overview
-├── LICENSE                 # Apache-2.0 license
+├── assets/                         # Figures, videos, and project media
+├── visuo_tactile_world_model/      # First staged release: tactile-aware world model
+│   ├── configs/                    # Accelerate / distributed runtime configs
+│   ├── docs/                       # World-model guides and release notes
+│   ├── examples/                   # YAML example
+│   ├── scripts/                    # Data preparation and tactile utility scripts
+│   ├── visuo_tactile_world_model/
+│   │   └── world_model/            # Visuo-tactile world-model Python package
+│   ├── run.py                      # YAML config launcher
+│   └── pyproject.toml              # Editable install metadata
+├── README.md                       # Project overview
+├── LICENSE                         # Apache-2.0 license
 └── .gitignore
 ```
 
 > 📚 Documentation and examples will be expanded as each module is released.
 
-## 🛠 Installation
+## 🌐 World Model
 
-The full environment will be documented together with the first code release.
+The visuo-tactile world model release lives in [`visuo_tactile_world_model`](./visuo_tactile_world_model). See that README for setup, examples, and model-specific notes.
 
-For now, clone the repository:
+## 🙏 Acknowledgement
 
-```bash
-git clone https://github.com/liushb9/TACO.git
-cd TACO
-```
-
-Future releases will provide a reproducible Python environment and installation command, for example:
-
-```bash
-pip install -e .
-```
-
-## 🚀 Quick Start
-
-Coming soon.
-
-## 📚 Documentation
-
-- [Release Notes](./docs/release_notes.md)
-- [Examples](./examples)
+We thank the [LightEWM project](https://github.com/XuWuLingYu/LightEWM) for its valuable codebase and engineering foundation, which informed the development of the visuo-tactile world model release.
 
 ## 📄 Citation
 

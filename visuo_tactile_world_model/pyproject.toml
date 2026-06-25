@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "visuo-tactile-world-model"
+version = "0.1.0"
+description = "Visuo-tactile world model training and inference code."
+readme = "README.md"
+authors = [{name = "TACO Team"}]
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10.1"
+keywords = [
+    "tactile",
+    "world-model",
+    "video-generation",
+    "robot-learning",
+    "wan",
+]
+dependencies = [
+    "absl-py",
+    "accelerate",
+    "av",
+    "cloudpickle==2.1.0",
+    "datasets",
+    "einops",
+    "easydict==1.9",
+    "ftfy",
+    "future==0.18.2",
+    "h5py",
+    "huggingface-hub",
+    "httpx[socks]",
+    "hydra-core==1.2.0",
+    "imageio",
+    "imageio-ffmpeg",
+    "matplotlib>=3.9,<3.11",
+    "modelscope",
+    "numpy",
+    "opencv-python-headless",
+    "pandas",
+    "peft",
+    "pillow",
+    "pyyaml",
+    "regex",
+    "safetensors",
+    "scikit-image",
+    "sentencepiece",
+    "torch>=2.0.0,<=2.7.0",
+    "torchvision",
+    "tqdm",
+    "transformers",
+    "termcolor",
+    "thop==0.1.1.post2209072238",
+    "typing_extensions",
+    "wandb",
+]
+
+[project.optional-dependencies]
+train = [
+    "deepspeed",
+]
+metrics = [
+    "lpips",
+]
+audio = [
+    "librosa",
+    "torchaudio",
+]
+attention = [
+    "flash-attn",
+    "sageattention",
+]
+usp = [
+    "xfuser",
+    "yunchang",
+]
+npu = [
+    "torch-npu",
+]
+robotics = [
+    "bddl==1.0.1",
+    "gym==0.25.2",
+    "robomimic==0.2.0",
+    "robosuite==1.4.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["visuo_tactile_world_model", "visuo_tactile_world_model.*"]
+
+[tool.setuptools]
+include-package-data = true
