@@ -22,6 +22,8 @@ runs/
 # Data and large assets
 data/
 datasets/
+*.pdf
+TACO.pdf
 *.ckpt
 *.pt
 *.pth
@@ -32,4 +34,3 @@ datasets/
 # System files
 .DS_Store
 Thumbs.db
-
