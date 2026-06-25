@@ -74,7 +74,7 @@ WAN_I2V_DEFAULTS = {
     "validation_fps": 16,
     "validation_quality": 5,
     "validation_seed_base": 0,
-    "validation_conditioning_frame_fractions": [0.0],
+    "validation_anchor_frame_fractions": [0.0],
     "validation_input_image_resize_mode": "stretch",
     "validation_infer_kwargs": {},
     "validation_video_metrics": ["psnr", "ssim"],
@@ -151,8 +151,8 @@ def _coerce_runtime_types(runtime: dict):
     for key in bool_keys:
         if runtime.get(key) is not None:
             runtime[key] = _as_bool(runtime[key])
-    if runtime.get("validation_conditioning_frame_fractions") is not None:
-        fractions = runtime["validation_conditioning_frame_fractions"]
+    if runtime.get("validation_anchor_frame_fractions") is not None:
+        fractions = runtime["validation_anchor_frame_fractions"]
         if isinstance(fractions, str):
             text = fractions.strip()
             if text.startswith("[") and text.endswith("]"):
@@ -164,7 +164,7 @@ def _coerce_runtime_types(runtime: dict):
                 fractions = [x.strip() for x in text.split(",") if x.strip()]
         if not isinstance(fractions, (list, tuple)):
             fractions = [fractions]
-        runtime["validation_conditioning_frame_fractions"] = [float(x) for x in fractions]
+        runtime["validation_anchor_frame_fractions"] = [float(x) for x in fractions]
 
     # validation_video_metrics: accept comma-separated string or list
     vm = runtime.get("validation_video_metrics", ["psnr", "ssim"])

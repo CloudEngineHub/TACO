@@ -202,8 +202,8 @@ def build_context_window_metadata(args):
                 "pad_last": bool(pad_last),
             }
             expanded["video"] = {"path": video_path, **window_meta}
-            # Wrap per-frame side streams (tactile / force / action) the same
-            # way so their LoadNumpyArray operator can slice the same window.
+            # Wrap per-frame tactile / force streams the same way so their
+            # LoadNumpyArray operator can slice the same window.
             for side_key in ("force_sequence", "tactile_sequence"):
                 side_val = record.get(side_key)
                 if isinstance(side_val, str):

@@ -26,7 +26,7 @@ class PeriodicWanVideoValidator:
         quality: int = 5,
         seed_base: int = 0,
         infer_kwargs: dict | None = None,
-        conditioning_frame_fractions: list[float] | None = None,
+        anchor_frame_fractions: list[float] | None = None,
         input_image_resize_mode: str = "stretch",
         wandb_run=None,
         wandb_log_video: bool = True,
@@ -41,7 +41,7 @@ class PeriodicWanVideoValidator:
         self.quality = int(quality)
         self.seed_base = int(seed_base)
         self.infer_kwargs = {} if infer_kwargs is None else dict(infer_kwargs)
-        self.conditioning_frame_fractions = self._sanitize_conditioning_fractions(conditioning_frame_fractions)
+        self.anchor_frame_fractions = self._sanitize_anchor_fractions(anchor_frame_fractions)
         self.input_image_resize_mode = input_image_resize_mode
         self.wandb_run = wandb_run
         self.wandb_log_video = wandb_log_video
@@ -101,12 +101,11 @@ class PeriodicWanVideoValidator:
             with torch.inference_mode():
                 item = self.dataset[sample_idx]
                 gt_video_path = item.get("video_path")
-                conditioning_inputs = self._build_conditioning_inputs(item)
-                for cond_idx, (frame_fraction, frame_index, input_image) in enumerate(conditioning_inputs):
+                anchor_inputs = self._build_anchor_inputs(item)
+                for anchor_idx, (frame_fraction, frame_index, input_image) in enumerate(anchor_inputs):
                     if self.input_image_resizer is not None:
                         input_image = self.input_image_resizer(input_image)
                     call_kwargs = dict(self.infer_kwargs)
-                    # tactile joint-denoise conditioning
                     tactile_init = item.get("tactile_init")
                     if tactile_init is not None:
                         call_kwargs.setdefault("tactile_init", tactile_init)
@@ -117,7 +116,7 @@ class PeriodicWanVideoValidator:
                             self.seed_base
                             + int(global_step)
                             + int(item.get("row_id", sample_idx))
-                            + int(cond_idx)
+                            + int(anchor_idx)
                         ),
                         progress_bar_cmd=lambda x: x,
                         **call_kwargs,
@@ -127,12 +126,12 @@ class PeriodicWanVideoValidator:
                     else:
                         video, tactile_pred = result, None
 
-                    condition_tag = self._condition_tag(frame_fraction, frame_index)
+                    anchor_tag = self._anchor_tag(frame_fraction, frame_index)
                     save_path = self._video_path(
                         global_step,
                         accelerator.process_index,
                         item,
-                        condition_tag=condition_tag,
+                        anchor_tag=anchor_tag,
                     )
                     os.makedirs(os.path.dirname(save_path), exist_ok=True)
                     save_video(video, save_path, fps=self.fps, quality=self.quality)
@@ -180,7 +179,7 @@ class PeriodicWanVideoValidator:
                     self._write_rank_manifest(global_step, accelerator.process_index, sample_idx, save_path)
                     print(
                         f"[Validation][rank{accelerator.process_index}] "
-                        f"step={global_step} cond={condition_tag} saved {save_path}"
+                        f"step={global_step} anchor={anchor_tag} saved {save_path}"
                     )
                     del video, input_image, result, tactile_pred
                 del item
@@ -210,11 +209,11 @@ class PeriodicWanVideoValidator:
         indices = torch.randperm(len(self.dataset), generator=generator)[:sample_count].tolist()
         return indices[process_index % len(indices)]
 
-    def _video_path(self, global_step: int, process_index: int, item: dict, condition_tag: str = "f0p") -> str:
+    def _video_path(self, global_step: int, process_index: int, item: dict, anchor_tag: str = "f0p") -> str:
         row_id = int(item.get("row_id", process_index))
         demo_id = str(item.get("demo_id", row_id))
         camera_key = str(item.get("camera_key", "unknown"))
-        name = f"row_{row_id:06d}__{demo_id}__{camera_key}__{condition_tag}.mp4"
+        name = f"row_{row_id:06d}__{demo_id}__{camera_key}__{anchor_tag}.mp4"
         return str(self._step_dir(global_step) / f"rank{int(process_index)}" / name)
 
     def _sidecar_path(self, save_path: str) -> str:
@@ -529,95 +528,6 @@ class PeriodicWanVideoValidator:
         fig.savefig(save_path, dpi=80)
         plt.close(fig)
 
-    def _save_state_compare_plot(
-        self,
-        gt_arr: np.ndarray,
-        pred_arr: np.ndarray,
-        save_path: str,
-    ) -> dict:
-        """Plot per-channel GT vs predicted state traces and return metrics.
-
-        Both ``gt_arr`` and ``pred_arr`` are expected to be in the same unit
-        space (raw for 方案 A / denormalized for 方案 B).  Shapes accepted:
-        ``(T, D)``, ``(1, T, D)``, or ``(B, T, D)`` — the first batch dim is
-        squeezed automatically.
-
-        Returns a dict with keys: overall_mse, overall_rmse, overall_mae,
-        per_ch_mse (list), per_ch_rmse (list), per_ch_mae (list).
-        """
-        if pred_arr.ndim == 3:
-            pred_arr = pred_arr[0]
-        if gt_arr.ndim == 3:
-            gt_arr = gt_arr[0]
-
-        D = int(pred_arr.shape[-1])
-        n = int(pred_arr.shape[0])
-        gt_used = gt_arr[:n]
-
-        m = min(gt_used.shape[0], n)
-        if m > 0:
-            diff = pred_arr[:m] - gt_used[:m]
-            per_ch_mse = (diff ** 2).mean(axis=0)
-            per_ch_mae = np.abs(diff).mean(axis=0)
-            overall_mse = float(per_ch_mse.mean())
-            overall_rmse = float(np.sqrt(overall_mse))
-            overall_mae = float(per_ch_mae.mean())
-        else:
-            per_ch_mse = np.full((D,), np.nan, dtype=np.float32)
-            per_ch_mae = np.full((D,), np.nan, dtype=np.float32)
-            overall_mse = float("nan")
-            overall_rmse = float("nan")
-            overall_mae = float("nan")
-
-        per_ch_rmse = np.sqrt(per_ch_mse)
-
-        metrics = {
-            "overall_mse": overall_mse,
-            "overall_rmse": overall_rmse,
-            "overall_mae": overall_mae,
-            "per_ch_mse": per_ch_mse.tolist(),
-            "per_ch_rmse": per_ch_rmse.tolist(),
-            "per_ch_mae": per_ch_mae.tolist(),
-        }
-
-        print(
-            f"[Validation][state] {os.path.basename(save_path)} "
-            f"mse={overall_mse:.6f} rmse={overall_rmse:.6f} mae={overall_mae:.6f} "
-            f"per_ch_mse={np.array2string(per_ch_mse, precision=4)}"
-        )
-
-        try:
-            import matplotlib
-            matplotlib.use("Agg")
-            import matplotlib.pyplot as plt
-
-            cols = 4
-            rows = (D + cols - 1) // cols
-            fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 2.2), squeeze=False)
-            gt_t = np.arange(gt_used.shape[0])
-            pred_t = np.arange(n)
-            for d in range(D):
-                ax = axes.flat[d]
-                ax.plot(gt_t, gt_used[:, d], label="gt", color="#1f77b4", linewidth=1.0)
-                ax.plot(pred_t, pred_arr[:, d], label="pred", color="#d62728", linewidth=1.0)
-                ax.set_title(f"ch{d}  mse={per_ch_mse[d]:.4f}", fontsize=9)
-                ax.tick_params(labelsize=7)
-                if d == 0:
-                    ax.legend(fontsize=7)
-            for d in range(D, rows * cols):
-                axes.flat[d].axis("off")
-            fig.suptitle(
-                f"state gt vs pred — MSE={overall_mse:.6f} RMSE={overall_rmse:.6f} MAE={overall_mae:.6f}",
-                fontsize=10,
-            )
-            fig.tight_layout(rect=(0, 0, 1, 0.96))
-            fig.savefig(save_path, dpi=80)
-            plt.close(fig)
-        except Exception as exc:
-            print(f"[Validation] matplotlib unavailable, skip state compare plot. Error: {exc}")
-
-        return metrics
-
     def _caption(self, item: dict, frame_fraction: float = 0.0, frame_index: int | None = None) -> str:
         row_id = int(item.get("row_id", -1))
         demo_id = str(item.get("demo_id", "unknown"))
@@ -626,7 +536,7 @@ class PeriodicWanVideoValidator:
         frame_index_text = "unknown" if frame_index is None else str(int(frame_index))
         return (
             f"row_id={row_id} demo_id={demo_id} camera_key={camera_key} "
-            f"cond_fraction={frame_fraction:.4f} cond_frame={frame_index_text} prompt={prompt}"
+            f"anchor_fraction={frame_fraction:.4f} anchor_frame={frame_index_text} prompt={prompt}"
         )
 
     def _log_to_wandb(self, saved_items: list[tuple[int, str, str, str]], global_step: int):
@@ -642,8 +552,7 @@ class PeriodicWanVideoValidator:
 
         log_data = {}
 
-        # Aggregate state / video metrics across all samples for scalar logging.
-        all_state_metrics: list[dict] = []
+        # Aggregate video metrics across all samples for scalar logging.
         all_video_metrics: list[dict] = []
 
         for process_index, save_path, caption, key_suffix in saved_items:
@@ -669,20 +578,6 @@ class PeriodicWanVideoValidator:
                     tactile_compare_path,
                     caption=f"tactile gt vs pred — {caption}",
                 )
-            state_compare_path = stem + "_state_compare.png"
-            if os.path.exists(state_compare_path):
-                log_data[f"{key_base}_state_compare"] = wandb.Image(
-                    state_compare_path,
-                    caption=f"state gt vs pred — {caption}",
-                )
-            state_metrics_path = stem + "_state_metrics.json"
-            if os.path.exists(state_metrics_path):
-                try:
-                    with open(state_metrics_path, "r", encoding="utf-8") as _mf:
-                        all_state_metrics.append(json.load(_mf))
-                except Exception:
-                    pass
-
             video_metrics_path = stem + "_video_metrics.json"
             if os.path.exists(video_metrics_path):
                 try:
@@ -712,46 +607,9 @@ class PeriodicWanVideoValidator:
                 f"(aggregated over {len(all_video_metrics)} sample(s))"
             )
 
-        # Log aggregated state scalar metrics (mean over all validation samples).
-        if all_state_metrics:
-            def _nanmean_scalar(key):
-                vals = [m[key] for m in all_state_metrics if key in m and not np.isnan(m[key])]
-                return float(np.mean(vals)) if vals else float("nan")
-
-            def _nanmean_per_ch(key):
-                arrays = [np.asarray(m[key]) for m in all_state_metrics if key in m]
-                valid = [a for a in arrays if not np.any(np.isnan(a))]
-                return np.mean(valid, axis=0).tolist() if valid else None
-
-            overall_mse = _nanmean_scalar("overall_mse")
-            overall_rmse = _nanmean_scalar("overall_rmse")
-            overall_mae = _nanmean_scalar("overall_mae")
-            log_data["val/state_mse"] = overall_mse
-            log_data["val/state_rmse"] = overall_rmse
-            log_data["val/state_mae"] = overall_mae
-
-            per_ch_mse = _nanmean_per_ch("per_ch_mse")
-            per_ch_rmse = _nanmean_per_ch("per_ch_rmse")
-            per_ch_mae = _nanmean_per_ch("per_ch_mae")
-            if per_ch_mse is not None:
-                for ch, v in enumerate(per_ch_mse):
-                    log_data[f"val/state_mse_ch{ch}"] = v
-            if per_ch_rmse is not None:
-                for ch, v in enumerate(per_ch_rmse):
-                    log_data[f"val/state_rmse_ch{ch}"] = v
-            if per_ch_mae is not None:
-                for ch, v in enumerate(per_ch_mae):
-                    log_data[f"val/state_mae_ch{ch}"] = v
-
-            print(
-                f"[Validation][state][wandb] step={global_step} "
-                f"mse={overall_mse:.6f} rmse={overall_rmse:.6f} mae={overall_mae:.6f} "
-                f"(aggregated over {len(all_state_metrics)} sample(s))"
-            )
-
         self.wandb_run.log(log_data, step=global_step)
 
-    def _sanitize_conditioning_fractions(self, fractions: list[float] | None) -> list[float]:
+    def _sanitize_anchor_fractions(self, fractions: list[float] | None) -> list[float]:
         if fractions is None:
             return [0.0]
         cleaned = []
@@ -800,17 +658,17 @@ class PeriodicWanVideoValidator:
         finally:
             reader.close()
 
-    def _condition_tag(self, frame_fraction: float, frame_index: int | None) -> str:
+    def _anchor_tag(self, frame_fraction: float, frame_index: int | None) -> str:
         pct = int(round(frame_fraction * 100.0))
         frame_text = "u" if frame_index is None else str(int(frame_index))
         return f"f{frame_text}_p{pct:03d}"
 
-    def _build_conditioning_inputs(self, item: dict) -> list[tuple[float, int | None, Image.Image]]:
+    def _build_anchor_inputs(self, item: dict) -> list[tuple[float, int | None, Image.Image]]:
         video_path = item.get("video_path")
         if video_path and os.path.exists(video_path):
             total_frames = self._get_total_video_frames(video_path)
             outputs = []
-            for frac in self.conditioning_frame_fractions:
+            for frac in self.anchor_frame_fractions:
                 target_idx = int(round(frac * max(total_frames - 1, 0)))
                 frame, actual_idx = self._read_video_frame(video_path, target_idx)
                 if frame is None:

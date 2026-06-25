@@ -39,8 +39,8 @@ def FlowMatchSFTLoss(pipe: "BasePipeline", **inputs):
 
 
 def FlowMatchJointDenoiseLoss(pipe: "BasePipeline", **inputs):
-    """Flow-matching loss over video latents and a tactile/action sequence
-    denoised jointly at the same timestep."""
+    """Flow-matching loss over video latents and a tactile sequence denoised
+    jointly at the same timestep."""
     max_timestep_boundary = int(inputs.get("max_timestep_boundary", 1) * len(pipe.scheduler.timesteps))
     min_timestep_boundary = int(inputs.get("min_timestep_boundary", 0) * len(pipe.scheduler.timesteps))
 

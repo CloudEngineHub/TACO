@@ -103,8 +103,8 @@ class WanInferRunner:
         seed_base = int(getattr(self.config, "seed", 0))
         infer_kwargs = dict(getattr(self.config, "infer_kwargs", {}))
         input_image_resize_mode = getattr(self.config, "input_image_resize_mode", "stretch")
-        conditioning_frame_fractions = self._sanitize_conditioning_fractions(
-            getattr(self.config, "conditioning_frame_fractions", [0.0])
+        anchor_frame_fractions = self._sanitize_anchor_fractions(
+            getattr(self.config, "anchor_frame_fractions", [0.0])
         )
         window_size = int(infer_kwargs.get("num_frames", 81))
         target_height = infer_kwargs.get("height", None)
@@ -121,12 +121,11 @@ class WanInferRunner:
             )
 
         for item in tqdm(dataset, total=len(dataset), desc="Infer"):
-            conditioning_inputs = self._build_conditioning_inputs(item, conditioning_frame_fractions, window_size)
-            for cond_idx, (frame_fraction, frame_index, input_image, compare_start) in enumerate(conditioning_inputs):
+            anchor_inputs = self._build_anchor_inputs(item, anchor_frame_fractions, window_size)
+            for anchor_idx, (frame_fraction, frame_index, input_image, compare_start) in enumerate(anchor_inputs):
                 if input_image_resizer is not None:
                     input_image = input_image_resizer(input_image)
                 call_kwargs = dict(infer_kwargs)
-                # tactile joint-denoise conditioning
                 tactile_init = item.get("tactile_init")
                 if tactile_init is not None:
                     call_kwargs.setdefault("tactile_init", tactile_init)
@@ -142,7 +141,7 @@ class WanInferRunner:
                 model_kwargs = dict(
                     prompt=prompt,
                     input_image=input_image,
-                    seed=seed_base + int(item["row_id"]) + int(cond_idx),
+                    seed=seed_base + int(item["row_id"]) + int(anchor_idx),
                     **call_kwargs,
                 )
                 if supports_context and context is not None:
@@ -153,8 +152,8 @@ class WanInferRunner:
                 else:
                     video, tactile_pred = result, None
 
-                cond_tag = self._condition_tag(frame_fraction, frame_index)
-                name = f"{item['row_id']:06d}__{item['demo_id']}__{item['camera_key']}__{cond_tag}.mp4"
+                anchor_tag = self._anchor_tag(frame_fraction, frame_index)
+                name = f"{item['row_id']:06d}__{item['demo_id']}__{item['camera_key']}__{anchor_tag}.mp4"
                 save_path = str(Path(output_dir) / name)
                 save_video(video, save_path, fps=fps, quality=quality)
 
@@ -177,13 +176,11 @@ class WanInferRunner:
                 del video, result
                 if tactile_pred is not None:
                     del tactile_pred
-                if state_pred is not None:
-                    del state_pred
                 gc.collect()
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
 
-    def _sanitize_conditioning_fractions(self, fractions) -> list:
+    def _sanitize_anchor_fractions(self, fractions) -> list:
         """Returns a list of floats and/or the sentinel string "tail"."""
         if fractions is None:
             return [0.0]
@@ -274,7 +271,7 @@ class WanInferRunner:
             compare.append(canvas)
         return compare
 
-    def _condition_tag(self, frame_fraction, frame_index: int | None) -> str:
+    def _anchor_tag(self, frame_fraction, frame_index: int | None) -> str:
         if frame_fraction == "tail":
             frame_text = "u" if frame_index is None else str(int(frame_index))
             return f"f{frame_text}_tail"
@@ -282,15 +279,15 @@ class WanInferRunner:
         frame_text = "u" if frame_index is None else str(int(frame_index))
         return f"f{frame_text}_p{pct:03d}"
 
-    def _build_conditioning_inputs(self, item: dict, fractions: list, window_size: int = 81):
-        """Returns list of (frame_fraction, cond_frame_index, input_image, compare_start).
+    def _build_anchor_inputs(self, item: dict, fractions: list, window_size: int = 81):
+        """Returns list of (frame_fraction, anchor_frame_index, input_image, compare_start).
 
         compare_start is the GT video frame to start the side-by-side compare from.
         For "tail" this is always max(0, N-window_size) regardless of whether
         _read_video_frame fell back to an earlier frame.
 
-        When the dataset pre-locks the conditioning frame (e.g. strided inference),
-        it sets item["compare_start"] to the exact GT frame index. In that case
+        When the dataset pre-locks the anchor frame (e.g. strided inference), it
+        sets item["compare_start"] to the exact GT frame index. In that case
         item["input_image"] is used directly so we never re-read the wrong frame,
         while video_path is still available for compare-video generation.
         """

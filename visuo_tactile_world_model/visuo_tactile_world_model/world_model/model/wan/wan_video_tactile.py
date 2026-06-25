@@ -1,8 +1,8 @@
 """
 Tactile joint-denoising modules for Wan video models.
 
-These are parallel to the DiT's video-token stream: a noisy tactile/action
-sequence `(B, T, tactile_dim)` is encoded into DiT-compatible tokens, attended
+These are parallel to the DiT's video-token stream: a noisy tactile sequence
+`(B, T, tactile_dim)` is encoded into DiT-compatible tokens, attended
 jointly with video tokens via standard self-attention, and finally projected
 back to `(B, T, tactile_dim)` as the velocity-field prediction.
 

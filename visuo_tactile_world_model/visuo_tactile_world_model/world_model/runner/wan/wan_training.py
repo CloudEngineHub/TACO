@@ -527,7 +527,7 @@ class WanTrainRunner:
                 quality=int(getattr(args, "validation_quality", 5)),
                 seed_base=int(getattr(args, "validation_seed_base", 0)),
                 infer_kwargs=getattr(args, "validation_infer_kwargs", {}),
-                conditioning_frame_fractions=getattr(args, "validation_conditioning_frame_fractions", [0.0]),
+                anchor_frame_fractions=getattr(args, "validation_anchor_frame_fractions", [0.0]),
                 input_image_resize_mode=getattr(args, "validation_input_image_resize_mode", "stretch"),
                 wandb_log_video=bool(getattr(args, "wandb_log_video", True)),
                 video_metrics=getattr(args, "validation_video_metrics", ["psnr", "ssim"]),

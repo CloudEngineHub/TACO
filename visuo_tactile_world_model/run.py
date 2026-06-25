@@ -110,7 +110,7 @@ def apply_ckpt_override(cfg: dict, ckpt_path: str) -> dict:
     if not ckpt_path.endswith(".safetensors"):
         raise ValueError(f"--ckpt must be a .safetensors file, got: {ckpt_path}")
 
-    # Training checkpoints (keys prefixed with 'dit.' / 'action_encoder.' etc.)
+    # Training checkpoints (keys prefixed with 'dit.' / tactile module names)
     # must be loaded by WanInferRunner._load_train_ckpt after the base pipeline
     # is built — not via the hash-based model_paths auto-loader.
     if _is_training_ckpt(ckpt_path):
@@ -264,16 +264,18 @@ def main():
     if args.ckpt:
         cfg = apply_ckpt_override(cfg, args.ckpt)
 
+    if args.dry_run:
+        if args.print_config:
+            print(yaml.safe_dump(cfg, sort_keys=False))
+        print("[DryRun] Config validated.")
+        return
+
     config_name = derive_config_name(args.config)
     run_id = resolve_run_id(config_name)
     run_dir = apply_output_convention(cfg, config_name, run_id)
 
     if args.print_config:
         print(yaml.safe_dump(cfg, sort_keys=False))
-
-    if args.dry_run:
-        print("[DryRun] Config validated.")
-        return
 
     if int(os.environ.get("RANK", "0")) == 0:
         snapshot_run_configs(run_dir, source_paths, cfg)

@@ -376,8 +376,8 @@ class LoadNumpyArray(DataProcessingOperator):
 
     Accepts either a string path or a dict carrying context-window fields
     (`path`, `context_start`, `context_window_size`, `pad_last`) — the same
-    schema `LoadVideo` consumes — so tactile/action streams are sliced to the
-    same time window as the video, then optionally resampled to `num_frames`.
+    schema `LoadVideo` consumes — so tactile streams are sliced to the same time
+    window as the video, then optionally resampled to `num_frames`.
 
     Slicing semantics mirror `LoadVideo.build_sequence_ids`:
       - If end exceeds available frames and `pad_last=True`, the last frame is
@@ -389,15 +389,14 @@ class LoadNumpyArray(DataProcessingOperator):
     """
 
     def __init__(self, num_frames: int = None, dtype=torch.float32, context_start_offset: int = 0,
-                 action_frame_ids: list | None = None):
+                 frame_ids: list | None = None):
         self.num_frames = num_frames
         self.dtype = dtype
         # Shift the array window relative to the video window.
-        # -1 → "next-step" mode: action[i] predicts frame[i+1] from frame[i].
         self.context_start_offset = context_start_offset
-        # Sparse action sampling: if set (e.g. [0, 2]), only these frame indices
-        # within the window are kept. num_frames is ignored when this is set.
-        self.action_frame_ids = action_frame_ids
+        # Sparse sampling: if set (e.g. [0, 2]), only these frame indices within
+        # the window are kept. num_frames is ignored when this is set.
+        self.frame_ids = frame_ids
 
     @staticmethod
     def _parse_item(data):
@@ -433,15 +432,14 @@ class LoadNumpyArray(DataProcessingOperator):
         path, ctx_start, ctx_size, pad_last = self._parse_item(data)
         ctx_start = max(0, ctx_start + self.context_start_offset)
         arr = np.load(path)
-        # Promote 1-D streams (single-channel actions/forces) to (T, 1) so downstream
-        # consumers (parse_extra_inputs, WanTactileTokenizer) get a
-        # consistent (T, dim) shape regardless of source layout.
+        # Promote 1-D streams to (T, 1) so downstream consumers get a consistent
+        # (T, dim) shape regardless of source layout.
         if arr.ndim == 1:
             arr = arr[:, None]
         arr = self._slice_window(arr, ctx_start, ctx_size, pad_last)
-        if self.action_frame_ids is not None:
+        if self.frame_ids is not None:
             # Sparse sampling: pick only the specified frame positions within the window.
-            ids = np.array(self.action_frame_ids, dtype=np.int64)
+            ids = np.array(self.frame_ids, dtype=np.int64)
             ids = np.clip(ids, 0, arr.shape[0] - 1)
             arr = arr[ids]
         elif self.num_frames is not None and arr.shape[0] != self.num_frames:

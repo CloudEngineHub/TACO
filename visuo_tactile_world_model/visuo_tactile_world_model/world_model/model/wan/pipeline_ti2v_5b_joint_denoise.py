@@ -1,10 +1,10 @@
 """
-Joint denoising pipeline for Wan2.2-TI2V-5B: video + tactile/action sequence
-are denoised in a single DiT forward pass, with tactile tokens concatenated
-into the self-attention sequence.
+Joint denoising pipeline for Wan2.2-TI2V-5B: video and tactile sequences are
+denoised in a single DiT forward pass, with tactile tokens concatenated into
+the self-attention sequence.
 
-See docs/joint_denoise.md and the reference implementation at
-DiffSynth-Action/diffsynth/models/wan_video_tactile_joint_denoise.py.
+See the RoPE design notes in the module README and the LightEWM-derived
+reference implementation.
 """
 
 from typing import Optional, Union

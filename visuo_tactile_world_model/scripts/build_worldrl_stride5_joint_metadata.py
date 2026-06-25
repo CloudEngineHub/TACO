@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Build TACO joint-denoise metadata CSV for World-RL stride5 layout.
 
-Each episode directory must contain: video.mp4, force.npy (shape (T, 12)), actions.npy.
+Each episode directory must contain: video.mp4 and force.npy (shape (T, 12)).
 Paths in the CSV are relative to dataset_base_path (the stride5 root).
 
-docs/tactile_world_model.md expects:
+The training config expects:
   * force_sequence as a relative .npy path
   * num_frames = full-episode length (used by context-window expansion; matches twist_beat CSV)
   * video relative path
@@ -16,8 +16,8 @@ because WanTrainingModule maps input_image from data[\"video\"][0].
 
 Usage:
   python3 scripts/build_worldrl_stride5_joint_metadata.py \\
-    --stride5-root /path/to/worldrl/stride5 \\
-    --output /path/to/worldrl/stride5/metadata_taco_joint.csv
+    --stride5-root <DATA_ROOT> \\
+    --output <METADATA_CSV>
 """
 
 from __future__ import annotations
@@ -60,7 +60,7 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument(
         "--stride5-root",
-        default="/path/to/worldrl/stride5",
+        required=True,
         help="Directory containing task subfolders (beat_xylophone, ...).",
     )
     p.add_argument(
@@ -93,8 +93,7 @@ def main() -> int:
                 continue
             vid = os.path.join(ep_dir, "video.mp4")
             frc = os.path.join(ep_dir, "force.npy")
-            act = os.path.join(ep_dir, "actions.npy")
-            if not (os.path.isfile(vid) and os.path.isfile(frc) and os.path.isfile(act)):
+            if not (os.path.isfile(vid) and os.path.isfile(frc)):
                 skipped += 1
                 continue
             try:

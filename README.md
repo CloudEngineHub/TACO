@@ -71,8 +71,7 @@ TACO/
 ├── assets/                         # Figures, videos, and project media
 ├── visuo_tactile_world_model/      # First staged release: tactile-aware world model
 │   ├── configs/                    # Accelerate / distributed runtime configs
-│   ├── docs/                       # World-model guides and release notes
-│   ├── examples/                   # YAML example
+│   ├── examples/                   # Minimal YAML example
 │   ├── scripts/                    # Data preparation and tactile utility scripts
 │   ├── visuo_tactile_world_model/
 │   │   └── world_model/            # Visuo-tactile world-model Python package
@@ -83,7 +82,7 @@ TACO/
 └── .gitignore
 ```
 
-> 📚 Documentation and examples will be expanded as each module is released.
+> 📚 Each released module keeps its setup notes in the module README.
 
 ## 🌐 World Model
 
