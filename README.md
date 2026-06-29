@@ -3,7 +3,7 @@
 # TACO: TActile World Model as a Self-COrrector for Scalable VLA Post-Training
 
 [![arXiv](https://img.shields.io/badge/arXiv-Coming%20Soon-b31b1b.svg)]()
-[![Project Page](https://img.shields.io/badge/Project-Coming%20Soon-blue)]()
+[![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://taco.github.io/)
 [![Code](https://img.shields.io/badge/Code-Staged%20Release-lightgrey)](#-roadmap)
 [![License](https://img.shields.io/badge/License-Apache--2.0-green.svg)](./LICENSE)
 
@@ -12,7 +12,7 @@
   <a href="https://jiayueru.github.io/">Yueru Jia</a><sup>1,2,*</sup>&nbsp;&nbsp;
   <a href="https://github.com/avx34/">Yuyang Yan</a><sup>1,*</sup>&nbsp;&nbsp;
   <a href="https://liujiaming1996.github.io/">Jiaming Liu</a><sup>1,*,†</sup>&nbsp;&nbsp;
-  <a href="https://scholar.google.com/citations?user=16aBS6kAAAAJ&hl=zh-CN&oi=sra">Xinran Zhang</a><sup>1,2</sup>&nbsp;&nbsp;
+  <a href="https://github.com/XinranJoy">Xinran Zhang</a><sup>1,2,*</sup>&nbsp;&nbsp;
   <a href="https://github.com/xuanxuanzzzii">Qiuxuan Feng</a><sup>1</sup>&nbsp;&nbsp;
   <a href="https://scholar.google.com/citations?user=fWDoWsQAAAAJ&hl=en">Yandong Guo</a><sup>2</sup>&nbsp;&nbsp;
   <a href="https://arnoldshijizhou.github.io/">Shiji Zhou</a><sup>4</sup>&nbsp;&nbsp;
