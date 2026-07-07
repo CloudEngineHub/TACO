@@ -41,7 +41,7 @@ TACO is a tactile-aware world-model-driven framework for scalable VLA post-train
 
 The resulting corrective supervision is used with **knowledge-insulated tactile adaptation**, allowing the policy to learn contact recovery behaviors without degrading pretrained visual-language priors.
 
-This repository now includes the first staged release of the TACO tactile-aware world model. The released code covers visuo-tactile joint denoising for Wan-style video world models, tactile/force sequence loading, training/cache runners, inference support, and example configs. Model checkpoints, datasets, tactile-aware VLA code, and the full post-training loop will be released progressively.
+This repository now includes staged releases of the TACO tactile-aware world model and tactile-aware VLA. The released code covers visuo-tactile joint denoising for Wan-style video world models, tactile/force sequence loading, tactile-aware VLA model and training code with advantage conditioning and knowledge insulation, training/cache runners, inference support, and example configs. Model checkpoints, datasets, and the full post-training loop will be released progressively.
 
 ## 📋 Table of Contents
 
@@ -61,7 +61,7 @@ This repository now includes the first staged release of the TACO tactile-aware 
 ## 🗓 Roadmap
 
 - [x] Open-source visuo-tactile world model
-- [ ] Open-source tactile-aware VLA
+- [x] Open-source tactile-aware VLA model
 - [ ] Open-source the full TACO framework
 
 ## 📁 Repository Structure
@@ -77,6 +77,12 @@ TACO/
 │   │   └── world_model/            # Visuo-tactile world-model Python package
 │   ├── run.py                      # YAML config launcher
 │   └── pyproject.toml              # Editable install metadata
+├── tactile_aware_vla/              # Tactile-aware VLA training and inference code
+│   ├── examples/taco/              # HDF5-to-LeRobot tactile data conversion
+│   ├── scripts/                    # Norm stats, training, and policy serving
+│   ├── src/openpi/                 # pi0.5 tactile + advantage + KI implementation
+│   ├── README.md                   # Module setup and training guide
+│   └── pyproject.toml              # Editable install metadata
 ├── README.md                       # Project overview
 ├── LICENSE                         # Apache-2.0 license
 └── .gitignore
@@ -87,6 +93,10 @@ TACO/
 ## 🌐 World Model
 
 The visuo-tactile world model release lives in [`visuo_tactile_world_model`](./visuo_tactile_world_model). See that README for setup, examples, and model-specific notes.
+
+## 🤖 Tactile-Aware VLA
+
+The tactile-aware VLA release lives in [`tactile_aware_vla`](./tactile_aware_vla). It provides pi0.5-style flow-matching training with force-history conditioning, scalar advantage conditioning, and knowledge-insulated adaptation. See the module README for data format, conversion, training, and inference instructions.
 
 ## 🙏 Acknowledgement
 
