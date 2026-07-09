@@ -2,8 +2,8 @@
 
 # TACO: TActile World Model as a Self-COrrector for Scalable VLA Post-Training
 
-[![arXiv](https://img.shields.io/badge/arXiv-Coming%20Soon-b31b1b.svg)]()
-[![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://taco.github.io/)
+[![arXiv](https://img.shields.io/badge/arXiv-2607.02840-b31b1b.svg)](https://arxiv.org/pdf/2607.02840)
+[![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://taco-wm.github.io/)
 [![Code](https://img.shields.io/badge/Code-Staged%20Release-lightgrey)](#-roadmap)
 [![License](https://img.shields.io/badge/License-Apache--2.0-green.svg)](./LICENSE)
 
@@ -104,4 +104,10 @@ We thank the [LightEWM project](https://github.com/XuWuLingYu/LightEWM) for its 
 
 ## 📄 Citation
 
-Coming soon.
+```bibtex
+@article{liu2026taco,
+  title={TACO: TActile World Model as a Self-COrrector for Scalable VLA Post-Training},
+  author={Liu, Shengbang and Jia, Yueru and Yan, Yuyang and Liu, Jiaming and Zhang, Xinran and Feng, Qiuxuan and Guo, Yandong and Zhou, Shiji and Shi, Boxin and Zhang, Shanghang},
+  journal={arXiv preprint},
+  year={2026}
+}
