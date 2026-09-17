@@ -1,17 +1,20 @@
-# Tactile-Aware VLA
+# Tactile VLA
 
-This module contains the TACO tactile-aware VLA release. It extends pi0.5-style flow matching with tactile force-history conditioning, scalar advantage conditioning, and knowledge-insulated training for contact-rich manipulation.
+This module implements TACO's knowledge-insulated policy post-training component described in [the v2 paper](https://arxiv.org/pdf/2607.02840v2). It extends pi0.5-style flow matching with tactile force-history conditioning and CFG-RL: binary advantage labels, label dropout, and classifier-free guidance for contact-rich manipulation.
+
+The directory was renamed from `tactile_aware_vla` to `tactile_vla`. The `openpi` Python package and existing training config names are unchanged.
 
 The released training path uses:
 
 - `force_history`: an 8-step, 12D left/right force-torque history.
-- `advantage`: a scalar success or preference label.
+- `advantage`: a binary CFG-RL label (`1` for positive behavior, `0` for failure behavior).
+- CFG-RL: advantage-label dropout during training and positive/null-label guidance during inference.
 - Knowledge insulation: the pretrained VLM prefix path is frozen for action/tactile loss, while action-side modules, `ForceEncoder`, `AdvantageEncoder`, and the null-advantage embedding remain trainable.
 
 ## Install
 
 ```bash
-cd tactile_aware_vla
+cd tactile_vla
 GIT_LFS_SKIP_SMUDGE=1 uv sync
 GIT_LFS_SKIP_SMUDGE=1 uv pip install -e .
 ```
@@ -37,8 +40,10 @@ Each frame should contain:
 | `state` | `(7,)` | End-effector pose plus gripper value. |
 | `actions` | `(7,)` | Action target in the same convention as `state`. |
 | `force_history` | `(8, 12)` | Left 6D wrench plus right 6D wrench over an 8-step history. |
-| `advantage` | `(1,)` | Scalar success/preference label. |
+| `advantage` | `(1,)` | Binary CFG-RL label (`0` or `1`). |
 | `task` | string | Language instruction. |
+
+In the paper, demonstrations, successful rollouts, and retained imagined corrections receive label `1`; failed rollouts receive `1` before failure onset and `0` from failure onset onward. The converter below assigns a constant `--advantage-value`, so mixed-success rollout data requires frame-level labels prepared according to this rule before training. Automatic failure localization and correction selection belong to the full pipeline, which is not included in this release.
 
 ## Convert HDF5 Data
 
@@ -103,6 +108,8 @@ uv run scripts/serve_policy.py policy:checkpoint \
 ```
 
 The policy input must include the same image, state, prompt, force-history, and advantage fields used during training.
+
+For positive-label inference, supply `advantage=1`. The model supports CFG-RL guidance as `u_cfg = u_null + cfg_scale * (u_positive - u_null)`. The example config uses `adv_dropout_prob=0.1` and `cfg_scale=1.0`; set the model's `cfg_scale` above `1.0` in `src/openpi/training/config.py` to enable guidance beyond the positive-label prediction. The null branch drops only the advantage condition and preserves the observation and tactile history.
 
 ## Acknowledgement
 

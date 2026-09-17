@@ -1,11 +1,15 @@
-# Visuo-Tactile World Model
+# Visuo-Tactile Generation Model
 
-This directory contains the first staged TACO release: a Wan-style visuo-tactile world model with joint video/tactile denoising, tactile/force sequence loading, training/cache runners, inference support, and example configs.
+This directory contains the visuo-tactile generation component of TACO's **compositional tactile world model**, as described in [the v2 paper](https://arxiv.org/pdf/2607.02840v2). Built on Wan2.2-TI2V-5B, it jointly denoises video and tactile sequences to imagine local corrections from failure-adjacent states. The release includes tactile/force sequence loading, training/cache runners, inference support, and example configs.
+
+The compositional world model also includes an **inverse dynamics and value model (IDVM)** for action labeling and signed progress estimation. That component and the full correction-selection pipeline are not included in this release.
+
+The directory was renamed from `visuo_tactile_world_model` to `visuo_tactile_generation_model`. The installable distribution `visuo-tactile-world-model` and Python package `visuo_tactile_world_model` are retained for compatibility; existing imports and YAML `class_path` values remain valid.
 
 ## Structure
 
 ```text
-visuo_tactile_world_model/
+visuo_tactile_generation_model/
 ├── configs/          # Accelerate / distributed runtime configs
 ├── examples/         # Minimal training/cache YAML example
 ├── scripts/          # Data preparation and tactile utility scripts
@@ -17,7 +21,7 @@ visuo_tactile_world_model/
 ## Install
 
 ```bash
-cd visuo_tactile_world_model
+cd visuo_tactile_generation_model
 pip install -e .
 ```
 
@@ -46,6 +50,8 @@ hf download XuWuLingYu/Wan2.2-5B-Robot --local-dir <ROBOT_DIT_DIR>
 The visuo-tactile joint RoPE logic is implemented in `visuo_tactile_world_model/world_model/model/wan/pipeline_ti2v_5b_joint_denoise.py`, inside `model_fn_wan_video_joint_denoise`. The relevant block builds standard video 3D RoPE frequencies for `(f, h, w)` video tokens, then appends tactile-token frequencies before the DiT self-attention blocks.
 
 For tactile tokens, the implementation maps tactile positions onto the video latent temporal axis with `torch.linspace(0, f - 1, T_tac).round()`, reuses `dit.freqs[0]` for temporal RoPE, and uses unit complex frequencies for the spatial `h/w` axes. This gives tactile tokens temporal alignment with video tokens while applying no spatial rotation.
+
+**Paper/code distinction:** v2 describes VAE-aligned grouping with `rho(i) = ceil(i / 4)`: `F0` aligns with `V0`, `F1`-`F4` with `V1`, and so on. Its 49-frame segments have 13 video latent positions and a clean first-frame tactile anchor. The current released RoPE code uses the rounded linear mapping above, which differs at group boundaries. The pipeline supports a clean first-frame anchor through `tactile_init`; updating the documentation does not change this implementation.
 
 Related files:
 
